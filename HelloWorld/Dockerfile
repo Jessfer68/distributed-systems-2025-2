@@ -2,6 +2,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 WORKDIR /app
 
 ENV MINOMBRE_ES=Jesus
+ENV MINOMBRE_ES2=Jesus2
 
 USER app
 FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:9.0 AS build
