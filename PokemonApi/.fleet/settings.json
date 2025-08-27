@@ -1,0 +1,12 @@
+{
+    "plugins": [
+        {
+            "type": "add",
+            "pluginName": "fleet.vim"
+        },
+        {
+            "type": "add",
+            "pluginName": "fleet.docker"
+        }
+    ]
+}
