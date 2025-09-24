@@ -1,10 +1,10 @@
 using System.ServiceModel;
-using PokemonApi.Dtos;
+using PokedexApi.Infrastructure.Soap.Dtos;
 
-namespace PokemonApi.Services;
+namespace PokedexApi.Infrastructure.Soap.Contracts;
 
 [ServiceContract(Name = "PokemonService", Namespace = "http://pokemon-api/pokemon-service")]
-public interface IPokemonService
+public interface IPokemonContract
 {
     [OperationContract]
     Task<PokemonResponseDto> CreatePokemon(CreatePokemonDto pokemon, CancellationToken cancellationToken);

@@ -14,8 +14,43 @@ public class PokemonRepository : IPokemonRepository
         _context = context;
     }
 
+    public async Task UpdatePokemonAsync(Pokemon pokemon, CancellationToken cancellationToken)
+    {
+        //UPDATE SET Name = "", ...,... ...,... WHERE Id = IdDelaEntidad;
+        _context.Pokemons.Update(pokemon.ToEntity());
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task DeletePokemonAsync(Pokemon pokemon, CancellationToken cancellationToken)
+    {
+        //Eliminado fisico o hard delete
+        //DELETE * FROM Pokemons WHERE Id = 'id';
+        
+        //Eliminado logico o soft delete
+        //UPDATE SET(IsDeleted, true) FROM Pokemons WHERE Id ....
+        _context.Pokemons.Remove(pokemon.ToEntity());
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<Pokemon>> GetPokemonsByNameAsync(string name, CancellationToken cancellationToken)
+    {
+        //SELECT * FROM Pokemons WHERE Name LIKE '%jfseilf%' AND IsDeleted NOT False;
+        var pokemons = await _context.Pokemons.AsNoTracking()
+            .Where(s => s.Name.Contains(name)).ToListAsync(cancellationToken);
+
+        return pokemons.ToModel();
+    }
+
+    public async Task<Pokemon> GetPokemonByIdAsync(Guid id, CancellationToken cancellationToken)
+    {
+        //SELECT * FROM Pokemons WHERE Id = 'sjefijs' LIMIT 1;
+        var pokemon = await _context.Pokemons.AsNoTracking().FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
+        return pokemon.ToModel();
+    }
+
     public async Task<Pokemon> GetByNameAsync(string name, CancellationToken cancellation)
     {
+        //SELECT * FROM Pokemons WHERE Name LIKE '%jfseilf%' LIMIT 1;
         var pokemon = await _context.Pokemons.AsNoTracking().FirstOrDefaultAsync(s => s.Name.Contains(name));
         return pokemon.ToModel();
     }

@@ -75,4 +75,14 @@ public static class PokemonMapper
             }
         };
     }
+
+    public static IList<PokemonResponseDto> ToResponseDto(this IReadOnlyList<Pokemon> pokemons)
+    {
+        return pokemons.Select(s => s.ToResponseDto()).ToList();
+    }
+
+    public static IReadOnlyList<Pokemon> ToModel(this IReadOnlyList<PokemonEntity> pokemons)
+    {
+        return pokemons.Select(s => s.ToModel()).ToList();
+    }
 }
