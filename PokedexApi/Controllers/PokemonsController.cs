@@ -68,7 +68,7 @@ public class PokemonsController : ControllerBase
     {
         try
         {
-            if (!IsValidAttack(createPokemon))
+            if (!IsValidAttack(createPokemon.Stats.Attack))
             {
                 //{"message": "Attack does not have a valid value"}
                 return BadRequest(new { Message = "Attack does not have a valid value" });
@@ -87,8 +87,93 @@ public class PokemonsController : ControllerBase
         }
     }
 
-    private static bool IsValidAttack(CreatePokemonRequest createPokemon)
+    //localhost:PORT/api/v1/pokemons/ID
+    // HTTP Verb - DELETE
+    // HTTP STATUS
+    // 204 - No Content (Si se borro correctamente)
+    // 200 - Ok (Si se borro correctamente) -- No sigue muy bien las buenas practicas de RESTFUL
+    // {"message": "Pokemon deleted successfully"}
+    // 404 - NotFound (No existe el pokemon que se quiere borrar)
+    // 500 - Internal Server Error
+    [HttpDelete("{id}")]
+    public async Task<ActionResult> DeletePokemonAsync(Guid id, CancellationToken cancellationToken)
     {
-        return createPokemon.Stats.Attack > 0;
+        try
+        {
+            await _pokemonService.DeletePokemonAsync(id, cancellationToken);
+            return NoContent(); //204
+        }
+        catch(PokemonNotFoundException)
+        {
+            return NotFound(); //404
+        }
+    }
+
+    //localhost:PORT/api/v1/Pokemons/ID
+    // HTTP Verb - PUT
+    // HTTP Status
+    // 204 - No Content --- Es mas orientado a RestFul
+    // 200 - OK (Retornar la entidad actualizada)
+    // 404 - NotFound
+    // 400 - Validaciones de los campos sean incorrectos
+    // 500 - Internal Server Error
+    [HttpPut("{id}")]
+    public async Task<ActionResult> UpdatePokemonAsync(Guid id, [FromBody] UpdatePokemonRequest pokemon, CancellationToken cancellationToken)
+    {
+        try
+        {
+            if(!IsValidAttack(pokemon.Stats.Attack))
+            {
+                return BadRequest(new {Message = "Invalid Attack Value"}); //400
+            }
+
+            await _pokemonService.UpdatePokemonAsync(pokemon.ToModel(id), cancellationToken);
+            return NoContent(); //204
+        }
+        catch(PokemonNotFoundException)
+        {
+            return NotFound(); //404
+        }
+        catch(PokemonAlreadyExistsException ex)
+        {
+            return Conflict(new {Message = ex.Message}); //409
+        }
+    }
+
+    //localhost:PORT/api/v1/Pokemons/ID
+    // HTTP Verb - PATCH
+    // 200 - Ok(Retornar la entidad actualizada) -- Mas recomendado
+    // 204 - NoContent
+    // 404 - NotFound
+    // 400 - Validacion
+    // 500 - Internal Server Error
+    [HttpPatch("{id}")]
+    public async Task<ActionResult<PokemonResponse>> PatchPokemonAsync(Guid id, [FromBody] PatchPokemonRequest pokemonRequest, CancellationToken cancellationToken)
+    {
+        try
+        {
+            if(pokemonRequest.Attack.HasValue && !IsValidAttack(pokemonRequest.Attack.Value))
+            {
+                return BadRequest(new {Message = "Invalid Attack Value"}); //400
+            }
+
+            var pokemon = await _pokemonService.PatchPokemonAsync(id, pokemonRequest.Name, pokemonRequest.Type, pokemonRequest.Attack,
+                pokemonRequest.Defense, pokemonRequest.Speed, cancellationToken);
+
+            return Ok(pokemon.ToResponse()); //200
+        }
+        catch(PokemonNotFoundException)
+        {
+            return NotFound(); //404
+        }
+        catch(PokemonAlreadyExistsException ex)
+        {
+            return Conflict(new {Message = ex.Message}); //409
+        }
+    }
+
+    private static bool IsValidAttack(int attack)
+    {
+        return attack > 0;
     }
 }

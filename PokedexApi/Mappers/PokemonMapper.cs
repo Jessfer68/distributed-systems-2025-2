@@ -1,3 +1,4 @@
+using System.Security.Authentication.ExtendedProtection;
 using PokedexApi.Dtos;
 using PokedexApi.Infrastructure.Soap.Dtos;
 using PokedexApi.Models;
@@ -6,6 +7,22 @@ namespace PokedexApi.Mappers;
 
 public static class PokemonMapper
 {
+    public static Pokemon ToModel(this UpdatePokemonRequest pokemon, Guid id)
+    {
+        return new Pokemon
+        {
+            Id = id,
+            Name = pokemon.Name,
+            Type = pokemon.Type,
+            Stats = new Stats
+            {
+                Attack = pokemon.Stats.Attack,
+                Defense = pokemon.Stats.Defense,
+                Speed = pokemon.Stats.Speed,
+            }
+        };
+    }
+
     public static Pokemon ToModel(this PokemonResponseDto pokemonResponseDto)
     {
         return new Pokemon
@@ -75,4 +92,21 @@ public static class PokemonMapper
             }
         };
     }
+
+    public static UpdatePokemonDto ToUpdateRequest(this Pokemon pokemon)
+    {
+        return new UpdatePokemonDto
+        {
+            Id = pokemon.Id,
+            Name = pokemon.Name,
+            Type = pokemon.Type,
+            Stats = new StatsDto
+            {
+                Attack = pokemon.Stats.Attack,
+                Defense = pokemon.Stats.Defense,
+                Speed = pokemon.Stats.Speed
+            }
+        };
+    }
+
 }

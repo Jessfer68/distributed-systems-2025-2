@@ -2,6 +2,7 @@ using System.ServiceModel;
 using PokedexApi.Infrastructure.Soap.Contracts;
 using PokedexApi.Mappers;
 using PokedexApi.Models;
+using PokedexApi.Exceptions;
 
 namespace PokedexApi.Gateways;
 
@@ -16,6 +17,35 @@ public class PokemonGateway : IPokemonGateway
         var endpoint = new EndpointAddress(configuration.GetValue<string>("PokemonService:Url"));
         _pokemonContract = new ChannelFactory<IPokemonContract>(binding, endpoint).CreateChannel();
         _logger = logger;
+    }
+
+    public async Task UpdatePokemonAsync(Pokemon pokemon, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _pokemonContract.UpdatePokemon(pokemon.ToUpdateRequest(), cancellationToken);
+        }
+        catch (FaultException ex) when(ex.Message == "Pokemon not found")
+        {
+            throw new PokemonNotFoundException(pokemon.Id);
+        }
+        catch (FaultException ex) when(ex.Message == "Pokemon with the same name already exists")
+        {
+            throw new PokemonAlreadyExistsException(pokemon.Name);
+        }
+    }
+
+    public async Task DeletePokemonAsync(Guid id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _pokemonContract.DeletePokemon(id, cancellationToken);
+        }
+        catch (FaultException ex) when(ex.Message == "Pokemon not found")
+        {
+            _logger.LogWarning(ex, "Pokemon not found");
+            throw new PokemonNotFoundException(id);
+        }
     }
     
     public async Task<Pokemon> GetPokemonByIdAsync(Guid id, CancellationToken cancellationToken)
