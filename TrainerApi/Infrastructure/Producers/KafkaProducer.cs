@@ -51,7 +51,7 @@ public class KafkaProducer : IMessageBrokerProducer, IDisposable
                     //Reintentos en message brokers
                     //Poison Message
                     { "content-type", "application/json"u8.ToArray() },
-                    { "produced-at", System.Text.Encoding.UTF8.GetBytes(DateTime.UtcNow.ToString("0")) },
+                    { "produced-at", System.Text.Encoding.UTF8.GetBytes(DateTime.UtcNow.ToString("O")) },
                     { "idempotence-key", Guid.NewGuid().ToByteArray() },
                 }
             };

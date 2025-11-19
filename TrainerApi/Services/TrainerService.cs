@@ -47,6 +47,22 @@ public class TrainerService : TrainerApi.TrainerService.TrainerServiceBase
             throw new RpcException(new Status(StatusCode.AlreadyExists, "Trainer already exists"));
 
         await _trainerRepository.UpdateAsync(trainer, context.CancellationToken);
+
+        var ev = new TrainerUpdatedEvent
+        {
+            Id = trainer.Id,
+            Name = trainer.Name,
+            Age = trainer.Age,
+            BirthDate = trainer.Birthdate,
+            CreatedAt = trainer.CreatedAt,
+            Medals = trainer.Medals.Select(s => new MedalEvent
+            {
+                Region = s.Region,
+                Type = s.Type.ToString()
+            }).ToList()
+        };
+
+        await _producer.ProduceAsync(ev, context.CancellationToken);
         
         return new Empty();
     }
@@ -58,6 +74,16 @@ public class TrainerService : TrainerApi.TrainerService.TrainerServiceBase
         
         var trainer = await GetTrainerAsync(request.Id, context.CancellationToken);
         await _trainerRepository.DeleteAsync(trainer.Id, context.CancellationToken);
+
+        var ev = new TrainerDeletedEvent
+        {
+            Id = trainer.Id,
+            Name = trainer.Name,
+            DeletedAt = DateTime.UtcNow
+        };
+
+        await _producer.ProduceAsync(ev, context.CancellationToken);
+
         return new Empty();
     }
 
