@@ -1,6 +1,7 @@
-using System.Runtime.InteropServices.ComTypes;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
+using TrainerApi.Events;
+using TrainerApi.Infrastructure.Producers;
 using TrainerApi.Repositories;
 using TrainerApi.Mappers;
 using TrainerApi.Models;
@@ -10,11 +11,13 @@ namespace TrainerApi.Services;
 public class TrainerService : TrainerApi.TrainerService.TrainerServiceBase
 {
     private readonly ITrainerRepository _trainerRepository;
+    private readonly IMessageBrokerProducer _producer;
     private static int LegalMexicanAge = 18;
     
-    public TrainerService(ITrainerRepository trainerRepository) 
+    public TrainerService(ITrainerRepository trainerRepository, IMessageBrokerProducer producer) 
     {
         _trainerRepository = trainerRepository;
+        _producer = producer;
     }
 
     public override async Task<TrainerResponse> GetTrainerById(TrainerByIdRequest request, ServerCallContext context)
@@ -71,6 +74,22 @@ public class TrainerService : TrainerApi.TrainerService.TrainerServiceBase
                 continue;
             var createdTrainer = await _trainerRepository.CreateAsync(trainer, context.CancellationToken);
             createdTrainers.Add(createdTrainer.ToResponse());
+
+            var ev = new TrainerCreatedEvent
+            {
+                Id = createdTrainer.Id,
+                Name = createdTrainer.Name,
+                Age = createdTrainer.Age,
+                BirthDate =  createdTrainer.Birthdate,
+                CreatedAt = createdTrainer.CreatedAt,
+                Medals = createdTrainer.Medals.Select(s => new MedalEvent
+                {
+                    Region = s.Region,
+                    Type = s.Type.ToString()
+                }).ToList()
+            };
+
+            await _producer.ProduceAsync(ev, context.CancellationToken);
         }
 
         return new CreateTrainerResponse 

@@ -8,6 +8,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - MongoDB__ConnectionString=mongodb://admin:password@mongodb:27017
+      - Kafka__BootstrapServers=kafka:9092
     depends_on:
       - mongodb
     networks:
@@ -28,7 +29,7 @@ services:
   zookeeper:
     image: confluentinc/cp-zookeeper:7.2.1
     ports:
-      - "27017:27017"
+      - "2181:2181"
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -37,7 +38,7 @@ services:
     volumes:
       - zookeeper-data:/var/lib/zookeeper/data
       - zookeeper-logs:/var/lib/zookeeper/log
-    
+
   kafka:
     image: confluentinc/cp-kafka:7.2.1
     depends_on:
@@ -49,7 +50,7 @@ services:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://0.0.0.0:29092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://0.0.0.0:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
@@ -58,7 +59,7 @@ services:
       - kafka-data:/var/lib/kafka/data
     networks:
       - trainers-network
-  
+
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     depends_on:
@@ -73,7 +74,6 @@ services:
       LOGGING_LEVEL_COM_PROVECTUS: DEBUG
     networks:
       - trainers-network
-      
 
 networks:
   trainers-network:

@@ -1,5 +1,6 @@
 using MongoDB.Driver;
 using TrainerApi.Infrastructure;
+using TrainerApi.Infrastructure.Producers;
 using TrainerApi.Repositories;
 using TrainerApi.Services;
 
@@ -7,6 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.Configure<MongoDBSettings>(builder.Configuration.GetSection("MongoDB"));
 builder.Services.AddScoped<ITrainerRepository, TrainerRepository>();
+builder.Services.AddSingleton<IMessageBrokerProducer, KafkaProducer>();
 
 builder.Services.AddSingleton<IMongoDatabase>(sp =>
 {
